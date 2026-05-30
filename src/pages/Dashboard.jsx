@@ -12,22 +12,12 @@ function Dashboard() {
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
 
-  // Load leads from Supabase on startup
-  useEffect(() => {
-    fetchLeads()
-  }, [])
+  useEffect(() => { fetchLeads() }, [])
 
   const fetchLeads = async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('leads')
-      .select('*')
-      .order('created_at', { ascending: false })
-    if (error) {
-      console.error('Error fetching leads:', error.message)
-    } else {
-      setLeads(data)
-    }
+    const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
+    if (!error) setLeads(data)
     setLoading(false)
   }
 
@@ -39,28 +29,30 @@ function Dashboard() {
   })
 
   const updateStatus = async (id, status) => {
-    const { error } = await supabase
-      .from('leads')
-      .update({ status })
-      .eq('id', id)
+    const { error } = await supabase.from('leads').update({ status }).eq('id', id)
     if (!error) setLeads(leads.map(l => l.id === id ? { ...l, status } : l))
   }
 
   const addLead = async (lead) => {
-    const { data, error } = await supabase
-      .from('leads')
-      .insert([{ name: lead.name, email: lead.email, source: lead.source, status: lead.status, notes: lead.note || '' }])
-      .select()
+    const { data, error } = await supabase.from('leads').insert([{
+      name: lead.name,
+      email: lead.email,
+      source: lead.source,
+      status: lead.status,
+      notes: lead.note || '',
+      created_at: lead.date
+    }]).select()
     if (!error) setLeads([data[0], ...leads])
     setShowModal(false)
   }
 
   const deleteLead = async (id) => {
-    const { error } = await supabase
-      .from('leads')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('leads').delete().eq('id', id)
     if (!error) setLeads(leads.filter(l => l.id !== id))
+  }
+
+  const updateLead = (updated) => {
+    setLeads(leads.map(l => l.id === updated.id ? updated : l))
   }
 
   return (
@@ -73,7 +65,7 @@ function Dashboard() {
             <h1>Leads</h1>
             <p className="subtitle">Manage your client pipeline</p>
           </div>
-          <button className="btn-primary" onClick={() => { console.log('clicked!'); setShowModal(true); }}>+ Add Lead</button>
+          <button className="btn-primary" onClick={() => setShowModal(true)}>+ Add Lead</button>
         </div>
 
         <StatsBar leads={leads} />
@@ -93,7 +85,7 @@ function Dashboard() {
         {loading ? (
           <div className="empty"><div className="empty-icon">⏳</div><p>Loading leads...</p></div>
         ) : (
-          <LeadTable leads={filtered} onStatusChange={updateStatus} onDelete={deleteLead} />
+          <LeadTable leads={filtered} onStatusChange={updateStatus} onDelete={deleteLead} onLeadUpdate={updateLead} />
         )}
 
         {showModal && <AddLeadModal onSave={addLead} onClose={() => setShowModal(false)} />}
