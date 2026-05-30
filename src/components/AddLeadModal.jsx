@@ -1,7 +1,10 @@
 import { useState } from "react"
 
 function AddLeadModal({ onSave, onClose }) {
-  const [form, setForm] = useState({ name: "", email: "", source: "Contact Form", status: "new", note: "" })
+  const [form, setForm] = useState({
+    name: "", email: "", source: "Contact Form",
+    status: "new", note: "", date: new Date().toISOString().split("T")[0]
+  })
 
   const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -38,6 +41,10 @@ function AddLeadModal({ onSave, onClose }) {
               <option>Referral</option>
               <option>LinkedIn</option>
               <option>Walk-in</option>
+              <option>Facebook</option>
+              <option>Twitter/X</option>
+              <option>TikTok</option>
+              <option>Other</option>
             </select>
           </div>
           <div className="form-group">
@@ -49,6 +56,11 @@ function AddLeadModal({ onSave, onClose }) {
               <option value="lost">Lost</option>
             </select>
           </div>
+        </div>
+
+        <div className="form-group">
+          <label>Date</label>
+          <input type="date" name="date" value={form.date} onChange={handle} />
         </div>
 
         <div className="form-group">
